@@ -1,0 +1,10 @@
+# .gitignore
+.env
+venv/
+__pycache__/
+sql_app.db
+*.db
+
+logs/
+/logs/
+*.log
