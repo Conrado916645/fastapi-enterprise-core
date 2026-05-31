@@ -10,11 +10,9 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     permissions = Column(JSON, default={})
     is_active = Column(Boolean, default=True)
-
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     status_changed_at = Column(DateTime(timezone=True), nullable=True)
+
+    requires_password_change = Column(Boolean, default=True)

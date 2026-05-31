@@ -39,6 +39,7 @@ class UserResponse(BaseModel):
     updated_at: datetime
     last_login_at: Optional[datetime] = None
     status_changed_at: Optional[datetime] = None
+    requires_password_change: bool
 
     class Config:
         from_attributes = True
@@ -48,4 +49,8 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class AdminPasswordReset(BaseModel):
+    new_password: str
+
+class UserChangePassword(BaseModel):
+    old_password: str
     new_password: str

@@ -2,13 +2,17 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_current_user, require_permission
+from app.api.dependencies import get_current_user, require_permission, get_base_user
 from app.core.database import get_db
 from app.core.rate_limit import limiter
 from app.schemas.users import UserCreate, UserResponse, UserUpdate, AdminPasswordReset
 from app.services import user_services
 
 from app.core.logger import logger 
+
+from app.schemas.users import UserChangePassword
+
+from app.models.user import User
 
 router = APIRouter()
 
@@ -67,3 +71,25 @@ async def admin_reset_password(user_id: str, password_data: AdminPasswordReset, 
     
     logger.warning(f"ADMIN OVERRIDE: Password forcefully reset for user ID '{user_id}'")
     return {"message": "User password successfully reset."}
+
+@router.post("/me/change-password")
+async def change_own_password(
+    password_data: UserChangePassword, 
+    current_user: User = Depends(get_base_user), 
+    db: Session = Depends(get_db)
+):
+    success = user_services.change_user_password(db, current_user, password_data.old_password, password_data.new_password)
+    
+    if not success:
+        logger.warning(f"Failed password change for '{current_user.username}': Incorrect old password.")
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+        
+    logger.info(f"User '{current_user.username}' successfully updated their password.")
+    return {"message": "Password successfully updated. Full access granted."}
+    
+    if not success:
+        logger.warning(f"Failed personal password change for '{current_user.username}': Incorrect old password.")
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+        
+    logger.info(f"User '{current_user.username}' successfully updated their password and unlocked their account.")
+    return {"message": "Password successfully updated. Full access granted."}

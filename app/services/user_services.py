@@ -3,6 +3,7 @@ from datetime import datetime
 from app.models.user import User
 from app.schemas.users import UserCreate, UserUpdate
 from app.core.security import get_password_hash
+from app.core.security import verify_password
 
 def get_user_by_username(db: Session, username: str):
     """Fetches a user from the database by their username."""
@@ -54,3 +55,16 @@ def reset_user_password(db: Session, user_id: str, new_password: str):
     user.hashed_password = get_password_hash(new_password)
     db.commit()
     return user
+
+def change_user_password(db: Session, user: User, old_pwd: str, new_pwd: str):
+    """Allows a user to voluntarily change their own password and clears the restriction flag."""
+    
+    if not verify_password(old_pwd, user.hashed_password):
+        return False
+        
+    user.hashed_password = get_password_hash(new_pwd)
+    user.requires_password_change = False # 🔓 Unlock their account!
+    
+    db.commit()
+    db.refresh(user)
+    return True
