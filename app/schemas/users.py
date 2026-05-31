@@ -1,7 +1,7 @@
 from pydantic import BaseModel, field_validator,model_validator
 import re
 from typing import Dict, List, Optional
-
+from datetime import datetime
 
 class UserCreate(BaseModel):
     username: str
@@ -34,6 +34,18 @@ class UserResponse(BaseModel):
     id: str
     username: str
     permissions: dict
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    last_login_at: Optional[datetime] = None
+    status_changed_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+class UserUpdate(BaseModel):
+    permissions: Optional[dict] = None
+    is_active: Optional[bool] = None
+
+class AdminPasswordReset(BaseModel):
+    new_password: str

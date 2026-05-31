@@ -10,6 +10,8 @@ from app.core.config import settings
 
 from app.core.logger import logger
 
+from datetime import datetime
+
 router = APIRouter()
 
 @router.post("/login")
@@ -23,6 +25,13 @@ async def login(
     
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
+    
+    if not user.is_active:
+        logger.warning(f"Failed login attempt: Account disabled for user {user.username}")
+        raise HTTPException(status_code=403, detail="Account has been deactivated. Contact an administrator.")
+    
+    user.last_login_at = datetime.utcnow()
+    db.commit()
     
     token_payload = {"sub": user.username, "permissions": user.permissions}
     access_token = create_access_token(data=token_payload)
@@ -52,7 +61,11 @@ async def refresh_access_token(
         user = db.query(User).filter(User.username == username).first()
         if not user:
             raise HTTPException(status_code=401, detail="User no longer exists")
-            
+        
+        if not user.is_active:
+            logger.warning(f"Refresh blocked: Account disabled for user {user.username}")
+        raise HTTPException(status_code=403, detail="Account has been deactivated. Contact an administrator.")
+    
         new_access_token = create_access_token(
             data={"sub": user.username, "permissions": user.permissions}
         )
