@@ -10,7 +10,7 @@ from app.core.config import settings
 
 from app.core.logger import logger
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -30,6 +30,23 @@ async def login(
         logger.warning(f"Failed login attempt: Account disabled for user {user.username}")
         raise HTTPException(status_code=403, detail="Account has been deactivated. Contact an administrator.")
     
+    if user.locked_until and user.locked_until > datetime.utcnow():
+        logger.warning(f"Login blocked: Account locked for {user.username} until {user.locked_until}")
+        raise HTTPException(status_code=403, detail="Account locked due to too many failed attempts. Try again later or contact an administrator.")
+    
+    if not verify_password(form_data.password, user.hashed_password):
+        user.failed_login_attempts += 1
+        
+        if user.failed_login_attempts >= 5:
+            user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+            logger.critical(f"BRUTE FORCE DETECTED: User '{user.username}' locked out for 15 minutes.")
+        db.commit()
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+    if user.failed_login_attempts > 0:
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        
     user.last_login_at = datetime.utcnow()
     db.commit()
     

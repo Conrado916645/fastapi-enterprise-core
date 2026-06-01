@@ -40,7 +40,8 @@ class UserResponse(BaseModel):
     last_login_at: Optional[datetime] = None
     status_changed_at: Optional[datetime] = None
     requires_password_change: bool
-
+    failed_login_attempts: int
+    locked_until: Optional[datetime] = None
     class Config:
         from_attributes = True
 

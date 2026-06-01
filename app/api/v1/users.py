@@ -93,3 +93,14 @@ async def change_own_password(
         
     logger.info(f"User '{current_user.username}' successfully updated their password and unlocked their account.")
     return {"message": "Password successfully updated. Full access granted."}
+
+@router.post("/{user_id}/unlock", dependencies=[Depends(require_permission("users", "update"))])
+async def admin_unlock_user(user_id: str, db: Session = Depends(get_db)):
+    success = user_services.unlock_user_account(db, user_id=user_id)
+    
+    if not success:
+        logger.warning(f"Account unlock failed: User ID '{user_id}' does not exist.")
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    logger.info(f"🚨 ADMIN ACTION: Account manually unlocked for user ID '{user_id}'")
+    return {"message": "User account successfully unlocked."}

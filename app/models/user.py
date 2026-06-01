@@ -14,5 +14,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     status_changed_at = Column(DateTime(timezone=True), nullable=True)
-
     requires_password_change = Column(Boolean, default=True)
+
+    failed_login_attempts = Column(Integer, default=0)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
