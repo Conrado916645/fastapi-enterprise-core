@@ -48,6 +48,12 @@ async def get_base_user(
     if not user:
         raise HTTPException(status_code=401, detail="User no longer exists")
         
+    if user.is_deleted:
+        raise HTTPException(
+            status_code=403, 
+            detail="Account has been permanently deactivated."
+        )
+    
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account deactivated")
         

@@ -106,3 +106,19 @@ def unlock_user_account(db: Session, user_id: str):
     db.commit()
     db.refresh(user)
     return True
+
+def soft_delete_user(db: Session, user_id: str):
+    """Marks a user as deleted instead of erasing them from the DB."""
+    user = get_user_by_id(db, user_id)
+    if not user:
+        return False
+        
+    user.is_deleted = True
+    user.is_active = False 
+    
+    db.commit()
+    db.refresh(user)
+    return True
+
+def get_all_active_users(db: Session):
+    return db.query(User).filter(User.is_deleted == False).all()

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user, require_permission, get_base_user
 from app.core.database import get_db
 from app.core.rate_limit import limiter
-from app.schemas.users import UserCreate, UserResponse, UserUpdate, AdminPasswordReset
+from app.schemas.users import UserCreate, UserResponse, UserUpdate, AdminPasswordReset, UserProfileUpdate
 from app.services import user_services
 
 from app.core.logger import logger 
@@ -13,6 +13,8 @@ from app.core.logger import logger
 from app.schemas.users import UserChangePassword
 
 from app.models.user import User
+
+from app.core.registry import APP_REGISTRY
 
 router = APIRouter()
 
@@ -102,7 +104,7 @@ async def admin_unlock_user(user_id: str, db: Session = Depends(get_db)):
         logger.warning(f"Account unlock failed: User ID '{user_id}' does not exist.")
         raise HTTPException(status_code=404, detail="User not found")
     
-    logger.info(f"🚨 ADMIN ACTION: Account manually unlocked for user ID '{user_id}'")
+    logger.info(f"ADMIN ACTION: Account manually unlocked for user ID '{user_id}'")
     return {"message": "User account successfully unlocked."}
 
 @router.post("/{user_id}/generate-api-key", dependencies=[Depends(require_permission("users", "update"))])
@@ -116,3 +118,41 @@ async def create_api_key(user_id: str, db: Session = Depends(get_db)):
         "message": "API Key generated successfully. Save this now, you will never see it again.",
         "api_key": raw_key
     }
+
+@router.get("/system/installed-apps", dependencies=[Depends(get_current_user)])
+async def get_installed_apps():
+    """The frontend calls this to dynamically draw the permission checkboxes."""
+    return {"installed_apps": APP_REGISTRY}
+
+@router.patch("/me/profile")
+async def update_own_profile(profile_data: UserProfileUpdate, current_user: User = Depends(get_base_user), db: Session = Depends(get_db)
+):
+    if profile_data.email:
+        current_user.email = profile_data.email
+    if profile_data.full_name:
+        current_user.full_name = profile_data.full_name
+        
+    db.commit()
+    db.refresh(current_user)
+    
+    logger.info(f"User '{current_user.username}' updated their personal profile.")
+    
+    return current_user
+
+@router.delete("/{user_id}", dependencies=[Depends(require_permission("users", "delete"))])
+async def delete_user(
+    user_id: str, 
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_base_user) 
+):
+    user_to_delete = user_services.soft_delete_user(db, user_id=user_id)
+    
+    if not user_to_delete:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    logger.warning(
+        f"USER DELETED: User '{user_to_delete.username}' (ID: {user_id}) "
+        f"was deleted by Admin '{current_admin.username}'."
+    )
+        
+    return {"message": "User account successfully soft-deleted."}
