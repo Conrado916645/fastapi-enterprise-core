@@ -34,7 +34,6 @@ async def register_user(request: Request, user_in: UserCreate, db: Session = Dep
 
 
 @router.get("/", response_model=list[UserResponse], dependencies=[Depends(get_current_user)])
-@limiter.limit("3/minute")
 async def get_all_users(request: Request, db: Session = Depends(get_db)):
     users = user_services.get_all_users(db)
 
@@ -42,7 +41,6 @@ async def get_all_users(request: Request, db: Session = Depends(get_db)):
     return users
 
 @router.get("/{user_id}", response_model=UserResponse, dependencies=[Depends(get_current_user)])
-@limiter.limit("3/minute")
 async def get_user_by_id(request: Request, user_id: str, db: Session = Depends(get_db)):
     user = user_services.get_user_by_id(db, user_id=user_id)
     
