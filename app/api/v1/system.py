@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 from app.core.database import get_db
-from app.api.dependencies import require_permission
+from app.api.dependencies import get_current_user,require_permission
 from app.models.user import User
 from app.schemas.system import DashboardResponse
 from app.core.registry import APP_REGISTRY # 🚨 Import your Registry
@@ -48,3 +48,8 @@ async def get_dashboard_metrics(db: Session = Depends(get_db)):
         "installed_apps": installed_apps,
         "recent_logs": recent_logs
     }
+
+@router.get("/installed-apps", dependencies=[Depends(get_current_user)])
+async def get_installed_apps():
+    """The frontend calls this to dynamically draw the permission checkboxes."""
+    return {"installed_apps": APP_REGISTRY}

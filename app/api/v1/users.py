@@ -119,10 +119,6 @@ async def create_api_key(user_id: str, db: Session = Depends(get_db)):
         "api_key": raw_key
     }
 
-@router.get("/system/installed-apps", dependencies=[Depends(get_current_user)])
-async def get_installed_apps():
-    """The frontend calls this to dynamically draw the permission checkboxes."""
-    return {"installed_apps": APP_REGISTRY}
 
 @router.patch("/me/profile")
 async def update_own_profile(profile_data: UserProfileUpdate, current_user: User = Depends(get_base_user), db: Session = Depends(get_db)
