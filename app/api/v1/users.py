@@ -18,7 +18,7 @@ from app.core.registry import APP_REGISTRY
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserResponse,dependencies=[Depends(require_permission("users", "create"))])
 @limiter.limit("3/minute")
 async def register_user(request: Request, user_in: UserCreate, db: Session = Depends(get_db)):
     existing_user = user_services.get_user_by_username(db, username=user_in.username)
@@ -33,14 +33,14 @@ async def register_user(request: Request, user_in: UserCreate, db: Session = Dep
     return new_user
 
 
-@router.get("/", response_model=list[UserResponse], dependencies=[Depends(get_current_user)])
+@router.get("/", response_model=list[UserResponse], dependencies=[Depends(require_permission("users", "read"))])
 async def get_all_users(request: Request, db: Session = Depends(get_db)):
     users = user_services.get_all_users(db)
 
     logger.info(f"User directory accessed. Returned {len(users)} user records.")
     return users
 
-@router.get("/{user_id}", response_model=UserResponse, dependencies=[Depends(get_current_user)])
+@router.get("/{user_id}", response_model=UserResponse, dependencies=[Depends(require_permission("users", "read"))])
 async def get_user_by_id(request: Request, user_id: str, db: Session = Depends(get_db)):
     user = user_services.get_user_by_id(db, user_id=user_id)
     
