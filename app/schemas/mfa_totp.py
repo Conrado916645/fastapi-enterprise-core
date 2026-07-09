@@ -6,3 +6,6 @@ class VerifyMFASchema(BaseModel):
 class MFAVerifyLoginSchema(BaseModel):
     mfa_token: str
     code: str
+
+class DisableMFASchema(BaseModel):
+    password: str

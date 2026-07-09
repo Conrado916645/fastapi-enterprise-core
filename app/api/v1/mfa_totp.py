@@ -1,13 +1,15 @@
 import pyotp
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, logger
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.core.database import get_db
+from app.core.security import verify_password
 from app.models.user import User
 from app.models.mfa import UserMFAMethod
-from app.schemas.mfa_totp import VerifyMFASchema
+from app.schemas.mfa_totp import DisableMFASchema, VerifyMFASchema
 from app.api.dependencies import get_base_user, get_current_user, require_permission
+from app.core.rate_limit import limiter
 
 router = APIRouter()
 
@@ -67,3 +69,34 @@ async def verify_totp(
     db.commit()
     
     return {"message": "Authenticator App successfully linked!"}
+
+@router.post("/mfa/disable")
+@limiter.limit("5/minute")
+async def disable_mfa(
+    request: Request,
+    payload: DisableMFASchema,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Securely disables MFA by requiring a password re-verification."""
+    
+    # 1. Step-Up Authentication (Sudo Mode)
+    if not verify_password(payload.password, current_user.hashed_password):
+        # Log this! Someone might be poking around an unlocked machine.
+        logger.warning(f"Failed MFA disable attempt for {current_user.username}: Incorrect password.")
+        raise HTTPException(status_code=401, detail="Incorrect password. Cannot disable MFA.")
+
+    # 2. Find all MFA methods attached to the user
+    mfa_methods = db.query(UserMFAMethod).filter(UserMFAMethod.user_id == current_user.id).all()
+    
+    if not mfa_methods:
+        raise HTTPException(status_code=400, detail="MFA is not enabled on this account.")
+
+    # 3. Wipe the configurations
+    for method in mfa_methods:
+        db.delete(method)
+        
+    db.commit()
+
+    logger.info(f"MFA successfully disabled for user {current_user.username}")
+    return {"message": "Two-Factor Authentication has been completely disabled."}
