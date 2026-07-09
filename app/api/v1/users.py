@@ -150,3 +150,21 @@ async def delete_user(
     )
         
     return {"message": "User account successfully soft-deleted."}
+
+@router.patch("/{user_id}/restore", dependencies=[Depends(require_permission("users", "update"))])
+async def restore_user(
+    user_id: str, 
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_base_user) 
+):
+    restored_user = user_services.restore_soft_deleted_user(db, user_id=user_id)
+    
+    if not restored_user:
+        raise HTTPException(status_code=404, detail="User not found or not deleted")
+        
+    logger.info(
+        f"USER RESTORED: User '{restored_user.username}' (ID: {user_id}) "
+        f"was restored by Admin '{current_admin.username}'."
+    )
+        
+    return {"message": "User account successfully restored."}

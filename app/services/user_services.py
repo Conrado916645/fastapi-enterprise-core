@@ -129,3 +129,17 @@ def soft_delete_user(db: Session, user_id: str):
 
 def get_all_active_users(db: Session):
     return db.query(User).filter(User.is_deleted == False).all()
+
+def restore_soft_deleted_user(db: Session, user_id: str):
+    """Restores a previously soft-deleted user."""
+    user = get_user_by_id(db, user_id)
+    if not user:
+        return None
+        
+    user.is_deleted = False
+    user.is_active = True
+    
+    db.commit()
+    db.refresh(user)
+    return user
+
