@@ -2,6 +2,7 @@ from fastapi import FastAPI,Request
 import time
 from app.api.v1.api import api_router as main_api_auth_v1
 from app.api.v1.system import router as system_router
+from app.api.v1.mfa_totp import router as mfa_totp_router
 from slowapi.errors import RateLimitExceeded
 from app.core.rate_limit import limiter, _rate_limit_exceeded_handler
 
@@ -65,6 +66,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(speedtester_api_router_v1, prefix="/api/v1/speedtester")
 app.include_router(main_api_auth_v1, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1/system", tags=["System Admin"])
+app.include_router(mfa_totp_router, prefix="/api/v1/mfa", tags=["MFA"])
 
 @app.get("/",  tags=["System"])
 async def root():

@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, JSON, func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 class User(Base):
@@ -34,4 +35,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     status_changed_at = Column(DateTime(timezone=True), nullable=True)
-    created_by = Column(String, nullable=True) # Track who created this user
+    created_by = Column(String, nullable=True) 
+
+    # --- MFA RELATIONSHIP ---
+    mfa_methods = relationship("UserMFAMethod", back_populates="user", cascade="all, delete-orphan")
