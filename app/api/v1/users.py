@@ -41,3 +41,12 @@ async def update_own_profile(profile_data: UserProfileUpdate, current_user: User
     updated_user = user_services.update_user_profile(db, current_user, profile_data)
     logger.info(f"User '{current_user.username}' updated their profile information.")
     return current_user
+
+@router.delete("/me")
+async def delete_own_account(
+    current_user: User = Depends(get_base_user), 
+    db: Session = Depends(get_db)
+):
+    user_services.delete_own_account(db, current_user)
+    logger.warning(f"User '{current_user.username}' has soft-deleted their own account.")
+    return {"message": "Your account has been successfully soft-deleted."}

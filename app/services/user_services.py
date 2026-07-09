@@ -156,3 +156,16 @@ def update_user_profile(db: Session, user: User, profile_data: dict):
     db.commit()
     db.refresh(user)
     return user
+
+def delete_own_account(db: Session, user: User):
+    """Allows a user to soft-delete their own account."""
+    user = get_user_by_id(db, user.id)
+    if not user:
+        return None
+        
+    user.is_deleted = True
+    user.is_active = False
+    
+    db.commit()
+    db.refresh(user)
+    return user
