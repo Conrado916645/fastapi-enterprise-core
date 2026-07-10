@@ -9,14 +9,13 @@ class User(Base):
     # --- CORE IDENTIFICATION ---
     id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=True) # Added for communication
+    email = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String, nullable=False)
 
     # --- PROFILE INFORMATION ---
     full_name = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
     date_of_birth = Column(DateTime(timezone=True), nullable=True)
-    email = Column(Boolean, default=False)
 
     # --- PERMISSIONS & SECURITY ---
     permissions = Column(JSON, default={})

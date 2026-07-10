@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator,model_validator
+from pydantic import BaseModel, EmailStr, field_validator,model_validator
 import re
 from typing import Dict, List, Optional
 from datetime import datetime
@@ -58,8 +58,7 @@ class UserChangePassword(BaseModel):
     new_password: str
 
 class UserProfileUpdate(BaseModel):
-    email: str | None = None
-    full_name: str | None = None
-    date_of_birth: datetime | None = None
-    phone_number: str | None = None
-    
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
+    phone_number: Optional[str] = None
