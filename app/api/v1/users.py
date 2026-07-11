@@ -65,3 +65,7 @@ async def delete_own_account(
     user.delete_own_account(db, current_user)
     logger.warning(f"User '{current_user.username}' has soft-deleted their own account.")
     return {"message": "Your account has been successfully soft-deleted."}
+
+@router.get('/me', response_model=UserResponse)
+async def me(current_user: User = Depends(get_current_user)):
+    return current_user
