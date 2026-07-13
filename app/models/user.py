@@ -38,3 +38,11 @@ class User(Base):
 
     # --- MFA RELATIONSHIP ---
     mfa_methods = relationship("UserMFAMethod", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def is_totp_enabled(self) -> bool:
+        """Returns True if the user has a verified TOTP method in the related table."""
+        return any(
+            method.method_type == "totp" and method.is_verified 
+            for method in self.mfa_methods
+        )
