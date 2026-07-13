@@ -47,6 +47,8 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     date_of_birth: Optional[datetime] = None
     phone_number: Optional[str] = None
+    is_totp_enabled: bool
+    
     class Config:
         from_attributes = True
 
