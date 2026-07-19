@@ -4,11 +4,6 @@
 # If you build a new app, you just type its name here.
 APP_REGISTRY = {
     "users": ["read", "create", "update", "delete"],
-    "speedtester": ["read", "create", "delete"],
-    
-    # 🚨 ADDED THE SYSTEM MODULE HERE
-    # 'read' allows viewing the dashboard. 'update' could be used later for changing global settings.
     "system": ["read", "create", "update", "delete"],
     
-    # "password_manager": ["read", "create", "update", "delete", "share"]  SAMPLE APP, NOT YET IMPLEMENTED
 }
